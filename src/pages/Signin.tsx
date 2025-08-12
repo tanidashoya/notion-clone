@@ -1,6 +1,17 @@
 import { Link } from 'react-router-dom';
+import { useState } from 'react';
+import { authRepository } from '../modules/auth/auth.repository';
 
 function Signin() {
+
+  const [email,setEmail] = useState("");
+  const [password,setPassword] = useState("");
+
+  const signin = async() => {
+    const user = await authRepository.signIn(email,password);
+    console.log(user);
+  }
+
   return (
     <div className="min-h-screen bg-gray-100 py-10 px-4 sm:px-6 lg:px-8">
       <div className="flex flex-col items-center">
@@ -19,6 +30,8 @@ function Signin() {
                 </label>
                 <div className="mt-1">
                   <input
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
                     id="email"
                     name="email"
                     placeholder="メールアドレス"
@@ -37,6 +50,8 @@ function Signin() {
                 </label>
                 <div className="mt-1">
                   <input
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
                     id="password"
                     name="password"
                     placeholder="パスワード"
@@ -47,7 +62,11 @@ function Signin() {
                 </div>
               </div>
               <div>
-                <button className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-slate-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring--500 disabled:opacity-50 disabled:cursor-not-allowed">
+                <button 
+                  disabled={!email || !password}
+                  onClick={signin}
+                  className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-slate-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring--500 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
                   ログイン
                 </button>
               </div>
