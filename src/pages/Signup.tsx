@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { authRepository } from "../modules/auth/auth.repository";
-
+import { useCurrentUserStore } from "@/modules/auth/current-user.state";
+import { Navigate } from "react-router-dom";
 function Signup() {
 
   const [name,setName] = useState("");  
   const [email,setEmail] = useState("");
   const [password,setPassword] = useState("");
-
+  const currentUserStore = useCurrentUserStore();
 
   //signUp メソッドを呼び出すと、内部で supabase.auth.signUp() が実行されますが、
   //これは Supabase の認証サーバーに新規ユーザー登録を依頼する API なので、
@@ -17,7 +18,12 @@ function Signup() {
   //パスワードは ハッシュ化されて保存されるため、復元はできない
   const signup = async() => {
     const user = await authRepository.signUp(name,email,password);
+    currentUserStore.set(user);
     console.log(user);
+  }
+
+  if (currentUserStore.currentUser != null) {
+    return <Navigate replace to="/" />;
   }
 
   return (

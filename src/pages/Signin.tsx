@@ -1,15 +1,25 @@
-import { Link } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
 import { useState } from 'react';
 import { authRepository } from '../modules/auth/auth.repository';
+import { useCurrentUserStore } from '../modules/auth/current-user.state';
 
 function Signin() {
 
   const [email,setEmail] = useState("");
   const [password,setPassword] = useState("");
+  const currentUserStore = useCurrentUserStore();
+  
 
+  //ログインに成功するとuserの中にログインしているユーザーの情報オブジェクトが格納されている
   const signin = async() => {
     const user = await authRepository.signIn(email,password);
+    //ログインに成功したら、グローバルな状態を更新する(ログインしたユーザー情報をグローバルステートに渡す)
+    currentUserStore.set(user);
     console.log(user);
+  }
+
+  if (currentUserStore.currentUser != null) {
+    return <Navigate replace to="/" />;
   }
 
   return (
