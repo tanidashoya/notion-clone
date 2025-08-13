@@ -9,7 +9,10 @@ import { Home } from "./pages/Home"
 import NoteDetail from "./pages/NoteDetail"
 import Signin from "./pages/Signin"
 import Signup from "./pages/Signup"
-
+import { useState,useEffect } from "react"
+import { useCurrentUserStore } from "./modules/auth/current-user.state"
+import { authRepository } from "./modules/auth/auth.repository"
+import { User } from "@supabase/supabase-js"
 
 // 親ルートがマッチすると、まず親ルートの element (<Layout/>) が描画される。
 // <Layout/> の中には共通UI（<Header/> や <Footer/>、<Sidebar/> など）があり、
@@ -18,6 +21,30 @@ import Signup from "./pages/Signup"
 // 例えば URL が "/" なら <Home/>、"/notes/:id" なら <NoteDetail/> が <Outlet/> に表示される。
 function App() {
 
+  //データの読み込み流加を管理する状態
+  const [isLoading,setIsLoading] = useState(true);
+  //グローバルな状態を管理するためのカスタムHook
+  const currentUserStore = useCurrentUserStore();
+  
+  //ログインしているユーザーの情報を取得するHook
+  const setSession = async() => {
+    const currentUser = await authRepository.getCurrentUser();
+    currentUserStore.set(currentUser as User);
+    setIsLoading(false);
+  }
+
+  //第二引数[]:コンポーネントが初回マウントされた直後に1回だけ実行
+  //ページをリロードしたり、ブラウザを閉じて再度開いた場合は「初回マウント扱い」
+  useEffect(() => {
+    setSession();
+  },[]);
+
+  //データの読み込みが完了するまでは、グローバルステートのユーザー情報が入っていないのでコンポーネントを表示しないようにする
+  //falseになることでメインのコンポーネントが表示される。
+  if (isLoading) return <div/>;
+
+  //path="/" が最初にレンダリング
+  //現在のURLが / にマッチするから 最初にそれがレンダリング
   return (
     <BrowserRouter>
       <div className="h-full">

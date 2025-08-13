@@ -21,6 +21,7 @@ import { createClient } from "@supabase/supabase-js";
 //※※※.gitignore に .env を必ず追加して、GitHubにアップロードしないようにする※※※
 //管理者用のAPIキー（service_role key）は、サーバー側でのみ使用するため、ブラウザ側では参照できないようにしている
 //つまりReact側のファイルに記述することはない
+//Vite の場合、プロジェクトの ルートディレクトリに .env ファイルを作成して、そこに環境変数を記述する
 export const supabase = createClient(
     import.meta.env.VITE_SUPABASE_URL,
     import.meta.env.VITE_SUPABASE_API_KEY

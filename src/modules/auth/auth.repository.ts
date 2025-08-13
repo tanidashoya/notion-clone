@@ -77,6 +77,30 @@ export const authRepository = {
           ...data.user,
           userName:data.user.user_metadata.name,
         }
+    },
+
+    //getSession():現在のブラウザ（またはクライアント）に保存されているセッション情報を取得（現在ログインしているユーザーのセッション情報を返す）
+    //セッションには、以下のような情報が含まれます：
+    // access_token（APIアクセス用の短期トークン）
+    // refresh_token（新しいアクセストークンを取得するためのトークン）
+    //user オブジェクト（ユーザーID、メール、user_metadata など）
+    // supabase.auth.signIn() や supabase.auth.signUp() を実行してログインに成功すると、
+    // Supabaseクライアントが自動でセッション情報（アクセストークンやユーザーデータ）をブラウザの localStorage に保存
+    async getCurrentUser() {
+      const {data,error} = await supabase.auth.getSession();
+
+      if (error !== null) {
+        throw new Error(error?.message)
+      }
+      //セッションがnullの場合は、ログインしていないのでnullを返す
+      if (data.session === null) {
+        return null;
+      }
+
+      return {
+        ...data.session.user,
+        userName:data.session.user.user_metadata.name,
+      }
     }
 }
 
@@ -137,5 +161,25 @@ error → null
 
 data.user → null
 error → エラーオブジェクト
+
+*/
+
+
+/*
+supabase.auth.getSession() は Promise を返し、
+data と error を含むオブジェクトになる
+
+data = {
+  session: {
+    access_token: "...",
+    refresh_token: "...",
+    expires_in: 3600,
+    user: {
+      id: "ユーザーUUID",
+      email: "xxx@example.com",
+      user_metadata: { name: "Taro" }
+    }
+  }
+}
 
 */

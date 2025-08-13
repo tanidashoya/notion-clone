@@ -12,12 +12,13 @@ import { User } from "@supabase/supabase-js";
 //currentUserAtom は アプリ全体で共有できる「現在のユーザー」用のグローバル状態。
 // <User> という型を付けているので、このatomには User 型のオブジェクトだけ を入れられる。
 //User型のデータを入れるグローバルな状態を作っている(「User 型の値を入れる箱」を作成)
+// これはTypeScript の書き方ジェネリック型（Generics） を使った記法で、atom 関数に対して「この atom に保持する値は必ず User 型である」という型情報を渡している
 const currentUserAtom = atom<User>();
 
 
 //ユーザー情報を持ったグローバルな状態（currentUserAtom）」 を
 // Reactコンポーネント内で読み書きできるようにするためのカスタムHook
-//オブジェクトを返している（useAtom は配列 [state, setState] を返しますが、
+//オブジェクトを返している（useAtom は配列 [state, setState] を返すが、
 // そのまま配列で返すと「どっちが値でどっちが更新関数なのか」が分かりづらいため）
 export const useCurrentUserStore = () => {
     //useAtom は 「今の atom の状態」 と 「その状態を更新する関数」 の 2つを配列で返す（React の useState と同じ形）
