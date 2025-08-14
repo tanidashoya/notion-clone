@@ -3,17 +3,19 @@ import { Plus } from 'lucide-react';
 import { useState } from 'react';
 import { noteRepository } from '../modules/notes/note.repository';
 import { useCurrentUserStore } from '../modules/auth/current-user.state';
+import { useNoteStore } from '../modules/notes/note.state';
 
 export function Home() {
 
   const [title, setTitle] = useState("");
   const {currentUser} = useCurrentUserStore();
+  const noteStore = useNoteStore();
   //currentUser!.id:Supabase Auth が発行する「ユーザーUID」（UUID形式の文字列
   //(! がついている理由は、TypeScript が 「この変数は null や undefined かもしれない」 と判断してエラーを出すのを回避するため)
   const createNote = async() => {
     const newNote = await noteRepository.create(currentUser!.id,{title})
+    noteStore.set([newNote]);
     setTitle("");
-    console.log(newNote);
   }
 
   return (
