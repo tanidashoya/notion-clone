@@ -7,8 +7,10 @@ import {
 import { FileIcon, MoreHorizontal, Plus, Trash } from 'lucide-react';
 import { Item } from '../SideBar/Item';
 import { cn } from '@/lib/utils';
+import { Note } from '@/modules/notes/note.entity';
 
 interface Props {
+  note:Note;
   expanded?: boolean;
   layer?: number;
   isSelected?: boolean;
@@ -19,6 +21,7 @@ interface Props {
 }
 
 export function NoteItem({
+  note,
   onClick,
   layer = 0,
   expanded = false,
@@ -67,7 +70,7 @@ export function NoteItem({
       style={{ paddingLeft: layer != null ? `${layer * 12 + 12}px` : '12px' }}
     >
       <Item
-        label={'test'}
+        label={note.title ?? '無題'}
         icon={FileIcon}
         onIconClick={onExpand}
         trailingItem={menu}

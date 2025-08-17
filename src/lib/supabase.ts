@@ -1,5 +1,6 @@
 //@supabase/supabase-js は Supabase の公式 JavaScript SDK（クライアントライブラリ）
 import { createClient } from "@supabase/supabase-js";
+import { Database } from "../../database.types";
 
 
 //supabase という定数を作って、それを外部に**エクスポート（他のファイルから使えるように）**しています。
@@ -22,10 +23,12 @@ import { createClient } from "@supabase/supabase-js";
 //管理者用のAPIキー（service_role key）は、サーバー側でのみ使用するため、ブラウザ側では参照できないようにしている
 //つまりReact側のファイルに記述することはない
 //Vite の場合、プロジェクトの ルートディレクトリに .env ファイルを作成して、そこに環境変数を記述する
-export const supabase = createClient(
+//Database型を指定することで、データベースの構造を型安全に利用できる(supabaseCLIでテーブルの型生成を自動生成)
+export const supabase = createClient<Database>(
     import.meta.env.VITE_SUPABASE_URL,
     import.meta.env.VITE_SUPABASE_API_KEY
 );
+
 
 
 /*
