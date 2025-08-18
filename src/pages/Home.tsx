@@ -15,8 +15,10 @@ export function Home() {
   const createNote = async() => {
     const newNote = await noteRepository.create(currentUser!.id,{title})
     noteStore.set([newNote]);
+    
     setTitle("");
   }
+
 
   return (
     <Card className="border-0 shadow-none w-1/2 m-auto">

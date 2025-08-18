@@ -29,7 +29,7 @@ export const noteRepository = {
                 user_id:userID,
                 //ノートのタイトル
                 title:params.title,
-                //ノートの親ドキュメントID
+                //ノートの親ドキュメントID（引数に渡された親のidがparentIdになる）
                 parent_document:params.parentId
             },
         ]).select().single();

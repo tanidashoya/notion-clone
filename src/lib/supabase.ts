@@ -35,6 +35,7 @@ export const supabase = createClient<Database>(
 ・ポイント
 service_role key:管理者権限を持つキー
 　サーバー側の環境変数だけに置く（.env など）
+
 　React（フロントエンド側）のコードには絶対に書かない
 　ブラウザからは直接参照できない場所でのみ使用
 anon key:公開用のキー

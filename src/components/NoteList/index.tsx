@@ -2,7 +2,8 @@ import { cn } from '@/lib/utils';
 import { NoteItem } from './NoteItem';
 import { useNoteStore } from '@/modules/notes/note.state';
 import { useState } from 'react';
-
+import { useCurrentUserStore } from '@/modules/auth/current-user.state';
+import { noteRepository } from '@/modules/notes/note.repository';
 
 // interface は TypeScript の型定義をするためのもの
 //関数の引数の中でも渡すことができる
@@ -24,9 +25,21 @@ interface NoteListProps {
 export function NoteList({ layer = 0, parentId }: NoteListProps) {
   //noteStore.getAll() は noteStore の状態を取得するためのメソッド
   //useNoteStore() でグローバルステートからノート一覧を取得
-  //取得したノート一覧を useState で管理
+  //notesはグローバルステートのノート一覧を取得している（変更があれば自動で更新される）
   const noteStore = useNoteStore();
-  const [notes,setNotes] = useState(noteStore.getAll());
+  const notes = noteStore.getAll();
+  const {currentUser} = useCurrentUserStore();
+
+  // 子ノートを作成する関数
+  //e:クリックイベントオブジェクト
+  //e.stopPropagation(); を呼ぶと、イベントのバブリング（親要素への伝播）を止めることができる
+  const createChild = async(e:React.MouseEvent,parentId:number) => {
+    e.stopPropagation();
+    const newNote = await noteRepository.create(currentUser!.id,{parentId})
+    //setはNote型の配列を受け取るため、newNoteを配列に入れている
+    noteStore.set([newNote])
+    //ローカル状態も更新して画面に即座に反映
+  };
 
   return (
     <>
@@ -50,7 +63,8 @@ export function NoteList({ layer = 0, parentId }: NoteListProps) {
       {notes.map((note) => {
         return (
           <div key={note.id}>
-            <NoteItem note={note} layer={layer} />
+            {/* createChild関数にクリックイベントeと親ノートのidを渡す（親ノートのidがparentIdになる） */}
+            <NoteItem note={note} layer={layer} onCreate={(e)=>createChild(e,note.id)}/>
           </div>
         );
       })}
