@@ -1,9 +1,18 @@
+/*
+index.tsx (NoteListコンポーネント)
+このコンポーネントはノート一覧を表示する親コンテナとして機能しています：
+階層的なノート表示: layerパラメータによって、ノートの階層構造を視覚的に表現
+空状態の処理: ノートがない場合に「ページがありません」メッセージを表示
+子ノート作成機能: 新しい子ノートを作成するcreateChild関数を提供
+グローバル状態管理: useNoteStoreを使用してノート一覧の状態を管理
+*/
+
 import { cn } from '@/lib/utils';
 import { NoteItem } from './NoteItem';
 import { useNoteStore } from '@/modules/notes/note.state';
-import { useState } from 'react';
 import { useCurrentUserStore } from '@/modules/auth/current-user.state';
 import { noteRepository } from '@/modules/notes/note.repository';
+import { Note } from '@/modules/notes/note.entity';
 
 // interface は TypeScript の型定義をするためのもの
 //関数の引数の中でも渡すことができる
@@ -30,6 +39,8 @@ export function NoteList({ layer = 0, parentId }: NoteListProps) {
   const notes = noteStore.getAll();
   const {currentUser} = useCurrentUserStore();
 
+  // currentUser!.id:currentUserがnullでないことを確認してからidを取得
+
   // 子ノートを作成する関数
   //e:クリックイベントオブジェクト
   //e.stopPropagation(); を呼ぶと、イベントのバブリング（親要素への伝播）を止めることができる
@@ -41,6 +52,13 @@ export function NoteList({ layer = 0, parentId }: NoteListProps) {
     //ローカル状態も更新して画面に即座に反映
   };
 
+  const fetchChildren = async(e:React.MouseEvent, note:Note) => {
+    e.stopPropagation();
+    const children = await noteRepository.find(currentUser!.id,note.id)
+    if (children == null) return;
+    //子ノートが取得できたら、子ノートをグローバルステートに更新
+    noteStore.set(children);
+  } 
   return (
     <>
       {/* Layerが0の場合はページがありませんと表示 */}
@@ -64,7 +82,12 @@ export function NoteList({ layer = 0, parentId }: NoteListProps) {
         return (
           <div key={note.id}>
             {/* createChild関数にクリックイベントeと親ノートのidを渡す（親ノートのidがparentIdになる） */}
-            <NoteItem note={note} layer={layer} onCreate={(e)=>createChild(e,note.id)}/>
+            <NoteItem 
+              note={note} 
+              layer={layer} 
+              onCreate={(e)=>createChild(e,note.id)} 
+              onExpand={(e:React.MouseEvent)=>fetchChildren(e,note)}
+            />
           </div>
         );
       })}

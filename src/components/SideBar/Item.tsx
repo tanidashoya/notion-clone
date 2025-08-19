@@ -1,3 +1,9 @@
+/*
+Item.tsx (Itemコンポーネント)の詳細構成
+役割
+サイドバーの基本的なリストアイテムUIを提供する再利用可能なコンポーネントです。NoteItemコンポーネントの表示部分を担当しています。
+*/
+
 import { cn } from '@/lib/utils';
 import { LucideIcon } from 'lucide-react';
 
