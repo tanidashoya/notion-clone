@@ -52,6 +52,8 @@ export function NoteList({ layer = 0, parentId }: NoteListProps) {
     //ローカル状態も更新して画面に即座に反映
   };
 
+  //子ノートを取得する関数
+  //この関数かcreateChild関数が実行されて初めて子ノートが取得されてグローバルステートに渡されて表示される
   const fetchChildren = async(e:React.MouseEvent, note:Note) => {
     e.stopPropagation();
     const children = await noteRepository.find(currentUser!.id,note.id)
@@ -78,7 +80,13 @@ export function NoteList({ layer = 0, parentId }: NoteListProps) {
       </p>
       {/* ノート一覧を表示 */}
       {/* Layerは常に0でNoteItemに渡される？ */}
-      {notes.map((note) => {
+      {/* 最初の画面ではparentIdがundefinedなので、filterではnullがフィルタリングされる */}
+      {/* 親ノートのIDがparentId（）【初期状態ではundefined】と一致するノートをフィルタリング */}
+      {/* 最初の呼び出しNoteList（SideBar/index.tsx 45行目）ではparentIdがundefinedなので、filterではnullがフィルタリングされる */}
+      {/* グローバルステートにも最初にparent_documentがnullのノート(ルートノート)が入っている */}
+      {notes
+      .filter((note)=>note.parent_document == parentId)
+      .map((note) => {
         return (
           <div key={note.id}>
             {/* createChild関数にクリックイベントeと親ノートのidを渡す（親ノートのidがparentIdになる） */}
@@ -86,11 +94,62 @@ export function NoteList({ layer = 0, parentId }: NoteListProps) {
               note={note} 
               layer={layer} 
               onCreate={(e)=>createChild(e,note.id)} 
+
               onExpand={(e:React.MouseEvent)=>fetchChildren(e,note)}
             />
+            {/* 
+            再帰コンポーネントは生成されるが次のグローバルステートの更新まで空のまま待機している状態
+            全てのNoteListコンポーネント（再帰含む）が同じグローバルステートを監視しているため、
+            fetchChildrenでグローバルステートが更新されると、該当するparentIdを持つ再帰コンポーネントが
+            自動的に新しいデータでフィルタリングを再実行し、子ノートの表示を開始する
+            */}
+            {/*  NoteListコンポーネントは生成された時の条件（props）を保持している */}
+            {/* 「parentId=undefined ⇒ parentId={親1ID} → parentId={親1の子ID}」のように再帰で入っていって、美しい階層構造を作り上げる */}
+            <NoteList layer={layer + 1} parentId={note.id} />
           </div>
         );
       })}
     </>
   );
 }
+
+
+/*
+再帰コンポーネントの動作
+
+親ノート(parent_document=null,parentId=undefined) の表示
+↓
+onExpand → fetchChildren(e, note) → 子ノート取得（parent_document=1）
+↓
+グローバルステート更新
+↓
+<NoteList parentId={1} /> → filter(parent_document == 1) → 子ノート表示
+*/
+
+
+
+/*
+各親ノートが独立した再帰ツリーを持つ
+ {notes
+      .filter((note)=>note.parent_document == parentId)
+      .map((note) => {
+        return (
+          <div key={note.id}>
+            <NoteItem 
+              note={note} 
+              layer={layer} 
+              onCreate={(e)=>createChild(e,note.id)} 
+              onExpand={(e:React.MouseEvent)=>fetchChildren(e,note)}
+            />
+            <NoteList layer={layer + 1} parentId={note.id} />
+          </div>
+        );
+      })}
+    </>
+  );
+}
+
+このコードの.mapによって各ノートごとに独立した処理が実行されるから、
+各親ノートが独立した再帰ツリーを持つ
+
+*/

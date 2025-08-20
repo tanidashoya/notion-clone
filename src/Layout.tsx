@@ -15,6 +15,9 @@ const Layout = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   // この時点ではnoteRepository.findメソッドにparentDocumentIDが渡されていないので、ルートドキュメントのノートを取得
+  //このルート親ノートは常に表示されている
+  //なぜならノートをつかさどるグローバルステートを更新する関数が古いものに新しいものを足す構造であるため
+  //const combinedNotes = [...oldNotes,...newNotes];
   const fetchNotes = async () => {
     setIsLoading(true);
     const notes = await noteRepository.find(currentUser!.id);
