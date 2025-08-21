@@ -13,6 +13,7 @@ import { useNoteStore } from '@/modules/notes/note.state';
 import { useCurrentUserStore } from '@/modules/auth/current-user.state';
 import { noteRepository } from '@/modules/notes/note.repository';
 import { Note } from '@/modules/notes/note.entity';
+import { useState } from 'react';
 
 // interface は TypeScript の型定義をするためのもの
 //関数の引数の中でも渡すことができる
@@ -31,14 +32,18 @@ interface NoteListProps {
   parentId?: number;
 }
 
-//最初にNoteListコンポーネントが呼ばれた時はlayer=0,parentId=undefined
+//最初にNoteListコンポーネントが呼ばれた時はlayer=0,parentId=null
 export function NoteList({ layer = 0, parentId }: NoteListProps) {
   //noteStore.getAll() は noteStore の状態を取得するためのメソッド
   //useNoteStore() でグローバルステートからノート一覧を取得
-  //notesはグローバルステートのノート一覧を取得している（変更があれば自動で更新される）
+  //notesはグローバルステートのノート一覧を取得している（変更があれば
+  // 自動で更新される）
   const noteStore = useNoteStore();
   const notes = noteStore.getAll();
   const {currentUser} = useCurrentUserStore();
+  //状態は「キーが Number、値が boolean の Map 型」であると宣言している
+  //Map型は、キーと値のペアを管理するデータ構造で、キーの一意性を保証しながら値を管理できる
+  const [expanded, setExpanded] = useState<Map<Number, boolean>>(new Map());
 
   // currentUser!.id:currentUserがnullでないことを確認してからidを取得
 
@@ -104,8 +109,7 @@ export function NoteList({ layer = 0, parentId }: NoteListProps) {
             fetchChildrenでグローバルステートが更新されると、該当するparentIdを持つ再帰コンポーネントが
             自動的に新しいデータでフィルタリングを再実行し、子ノートの表示を開始する
             */}
-            {/*  NoteListコンポーネントは生成された時の条件（props）を保持している */}
-            {/* 「parentId=undefined ⇒ parentId={親1ID} → parentId={親1の子ID}」のように再帰で入っていって、美しい階層構造を作り上げる */}
+            {/* note.id:親ノートのidを渡すことで、その親ノートの子ノートを取得する */}
             <NoteList layer={layer + 1} parentId={note.id} />
           </div>
         );
