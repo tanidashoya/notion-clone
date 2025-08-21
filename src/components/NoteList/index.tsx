@@ -31,6 +31,7 @@ interface NoteListProps {
   parentId?: number;
 }
 
+//最初にNoteListコンポーネントが呼ばれた時はlayer=0,parentId=undefined
 export function NoteList({ layer = 0, parentId }: NoteListProps) {
   //noteStore.getAll() は noteStore の状態を取得するためのメソッド
   //useNoteStore() でグローバルステートからノート一覧を取得
