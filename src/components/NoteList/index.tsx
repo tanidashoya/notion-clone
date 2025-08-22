@@ -56,6 +56,9 @@ export function NoteList({ layer = 0, parentId }: NoteListProps) {
     //setはNote型の配列を受け取るため、newNoteを配列に入れている
     noteStore.set([newNote])
     //ローカル状態も更新して画面に即座に反映
+    //ここでのsetはMap型のsetメソッドを呼び出している（キー,値のペアを追加する）
+    //子ノートを追加すると親ノートが展開されるようにする
+    setExpanded((prev)=>prev.set(parentId,true));
   };
 
   //子ノートを取得する関数
@@ -66,6 +69,13 @@ export function NoteList({ layer = 0, parentId }: NoteListProps) {
     if (children == null) return;
     //子ノートが取得できたら、子ノートをグローバルステートに更新
     noteStore.set(children);
+    // Reactの不変性原則に従い、新しいMapを作成して展開状態を更新
+    setExpanded((prev)=>{
+      const newExpanded = new Map(prev); // 既存Mapのコピーを作成
+      //オブシェクトではobj.nameやobj["name"]でアクセスできるが、Mapではgetメソッドを使う
+      newExpanded.set(note.id,!prev.get(note.id));
+      return newExpanded;
+    })
   } 
   return (
     <>
@@ -100,7 +110,7 @@ export function NoteList({ layer = 0, parentId }: NoteListProps) {
               note={note} 
               layer={layer} 
               onCreate={(e)=>createChild(e,note.id)} 
-
+              expanded={expanded.get(note.id)}
               onExpand={(e:React.MouseEvent)=>fetchChildren(e,note)}
             />
             {/* 
@@ -110,7 +120,9 @@ export function NoteList({ layer = 0, parentId }: NoteListProps) {
             自動的に新しいデータでフィルタリングを再実行し、子ノートの表示を開始する
             */}
             {/* note.id:親ノートのidを渡すことで、その親ノートの子ノートを取得する */}
-            <NoteList layer={layer + 1} parentId={note.id} />
+            {expanded.get(note.id) && (
+              <NoteList layer={layer + 1} parentId={note.id} />
+            )}
           </div>
         );
       })}

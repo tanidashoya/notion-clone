@@ -24,7 +24,7 @@ import { Item } from '../SideBar/Item';
 import { cn } from '@/lib/utils';
 import { Note } from '@/modules/notes/note.entity';
 import { useState } from 'react';
-import { ChevronRight } from 'lucide-react';
+import { ChevronRight, ChevronDown } from 'lucide-react';
 
 interface Props {
   note:Note;
@@ -37,6 +37,7 @@ interface Props {
   onClick?: () => void;
 }
 
+//expanded:ノートの展開状態を管理するためのprops：デフォルトはfalse（最初は空のMapオブジェクトが渡されるためfalseとなる）
 export function NoteItem({
   note,
   onClick,
@@ -51,7 +52,7 @@ export function NoteItem({
 
   // ファイルのアイコンを返す関数：マウスが乗ったらChevronRightを返す
   const getIcon = () => {
-    return isHovered ? ChevronRight : FileIcon;
+    return expanded ? ChevronDown : isHovered ? ChevronRight : FileIcon;
   }
 
   // メニューを返す関数
@@ -100,6 +101,7 @@ export function NoteItem({
       role="button"
       style={{ paddingLeft: layer != null ? `${layer * 12 + 12}px` : '12px' }}
     >
+      {/* iconには、ノートの展開状態に応じてChevronDownかマウスが乗ったらChevronRight、乗ってなければFileIconを返す */}
       <Item
         label={note.title ?? '無題'}
         // ノートのアイコン

@@ -7,6 +7,7 @@ Item.tsx (Itemコンポーネント)の詳細構成
 import { cn } from '@/lib/utils';
 import { LucideIcon } from 'lucide-react';
 
+//iconはLucideIcon型であると宣言している
 interface ItemProps {
   label: string;
   icon: LucideIcon;
@@ -20,6 +21,8 @@ export function Item({
   label,
   onClick,
   onIconClick,
+  //リネーム構文：icon:Icon → というように、iconという名前をIconという名前にリネームしている
+  //コンポーネントの引数内でpropsを受け取るときに、propsの名前を変更したい場合に使う
   icon: Icon,
   isActive = false,
   trailingItem,
@@ -34,6 +37,7 @@ export function Item({
       role="button"
       style={{ paddingLeft: '12px' }}
     >
+      {/* Iconに{}がないのは中身がコンポーネントだから。{}は値を埋め込むときに使う */}
       <Icon
         onClick={onIconClick}
         className="shrink-0 w-[18px] h-[18px] mr-2 text-muted-foreground"
