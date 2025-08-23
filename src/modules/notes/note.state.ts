@@ -47,8 +47,11 @@ export const useNoteStore = () => {
 
             //Object.values:引数に渡されたオブジェクトの値を配列にするメソッド
             return Object.values(uniqueNotes);
-        })
-    };
+        });
+    }
+
+
+    const getOne = (id:number) => notes.find((note) => note.id == id);
 
 
     //getAll という名前の関数を持つオブジェクトを返していて、その関数の戻り値が notes 配列
@@ -58,5 +61,6 @@ export const useNoteStore = () => {
     return {
         getAll:() => notes,
         set,
+        getOne,
     }
 }

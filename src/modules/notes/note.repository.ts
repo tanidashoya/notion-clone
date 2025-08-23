@@ -66,7 +66,25 @@ export const noteRepository = {
                 //notesテーブルのparent_dosumentカラムの値がnullということはそれが最も親のノートとなるため
                   : await query.is("parent_document",null);
             return data
+    },
+
+    //ノートの詳細を取得する関数
+    async findOne(userId:string, id:number) {
+        const {data} = await supabase.from("notes").select().eq("id",id).eq("user_id",userId).single();
+        return data; 
+    },
+
+    // updateの引数にはnotesテーブルにおいて更新したいclolumについてオブジェクトで渡す
+    //database.type.tsで定義されているオブジェクトの型を渡す（Update）
+    //updateは引数に渡されたオブジェクトのキー名と一致するカラム名の部分のデータを更新する
+    async update(id:number,note:{title?:string, content?:string}){    
+        const {data} = await supabase
+            .from("notes")
+            .update(note)
+            .eq("id",id)
+            .select()
+            .single();
+        return data;
     }
+
 }
-
-
