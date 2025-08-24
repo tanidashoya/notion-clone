@@ -14,6 +14,7 @@ import { useCurrentUserStore } from '@/modules/auth/current-user.state';
 import { noteRepository } from '@/modules/notes/note.repository';
 import { Note } from '@/modules/notes/note.entity';
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 // interface は TypeScript の型定義をするためのもの
 //関数の引数の中でも渡すことができる
@@ -34,6 +35,8 @@ interface NoteListProps {
 
 //最初にNoteListコンポーネントが呼ばれた時はlayer=0,parentId=null
 export function NoteList({ layer = 0, parentId }: NoteListProps) {
+  //useNavigate:React Router のナビゲーション関数を使用して、ユーザーを別のページに移動させる
+  const navigate = useNavigate();
   //noteStore.getAll() は noteStore の状態を取得するためのメソッド
   //useNoteStore() でグローバルステートからノート一覧を取得
   //notesはグローバルステートのノート一覧を取得している（変更があれば
@@ -59,6 +62,8 @@ export function NoteList({ layer = 0, parentId }: NoteListProps) {
     //ここでのsetはMap型のsetメソッドを呼び出している（キー,値のペアを追加する）
     //子ノートを追加すると親ノートが展開されるようにする
     setExpanded((prev)=>prev.set(parentId,true));
+    //子ノートを作成したら、その子ノートの詳細ページに移動する
+    moveToDetail(newNote.id);
   };
 
   //子ノートを取得する関数
@@ -76,7 +81,13 @@ export function NoteList({ layer = 0, parentId }: NoteListProps) {
       newExpanded.set(note.id,!prev.get(note.id));
       return newExpanded;
     })
-  } 
+  }
+
+  //引数で渡されたidを持つノート詳細ページに移動する関数
+  const moveToDetail =(noteId:number)=>{
+    navigate(`notes/${noteId}`)
+  }
+  
   return (
     <>
       {/* Layerが0の場合はページがありませんと表示 */}
@@ -112,6 +123,7 @@ export function NoteList({ layer = 0, parentId }: NoteListProps) {
               onCreate={(e)=>createChild(e,note.id)} 
               expanded={expanded.get(note.id)}
               onExpand={(e:React.MouseEvent)=>fetchChildren(e,note)}
+              onClick={()=>moveToDetail(note.id)}
             />
             {/* 
             再帰コンポーネントは生成されるが次のグローバルステートの更新まで空のまま待機している状態

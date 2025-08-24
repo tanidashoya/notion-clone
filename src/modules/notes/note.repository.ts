@@ -59,13 +59,31 @@ export const noteRepository = {
                 // ノートをクリックしたときにその id が parentDocumentID として渡される
                 // parent_document = parentDocumentID の子ノートを取得し、UI 上で展開する
                 //.eq:通常の値（数値・文字列など）を比較するときに使う
-                //.is: null や undefined を含むような値（主に null）を比較するときに使う
+                //.is: null や undefined を含むような値（主にnull）を比較するときに使う
                  ? await query.eq("parent_document",parentDocumentID)
+     
                  // parent_document カラムが null のデータだけを取得
                 // (parentDocumentID が渡されていなければルートドキュメントのノートを取得する)⇒最初の子ノートを展開していないときの親ノート一覧を取得
                 //notesテーブルのparent_dosumentカラムの値がnullということはそれが最も親のノートとなるため
                   : await query.is("parent_document",null);
             return data
+    },
+
+    //textSearch:テキスト検索を行う
+    //.textSearch("title",keyword):notesテーブルのtitleカラムにkeywordが含まれるデータを取得
+    //.eq("user_id",userID):notesテーブルのuser_idカラムがuserIDと一致するデータを取得
+    async findByKeyword(userID:string,keyword:string){
+        const {data} = await supabase
+            .from("notes")
+            .select()
+            .eq("user_id",userID)
+            //or:OR条件を指定する
+            //.ilike:部分一致を検索する（大文字小文字を区別せずに検索するメソッド）
+            //%${keyword}%:keywordの前後に%を付けることで部分一致を検索する
+            //.orをつけることで（）内の,で区切ることでOR条件を指定する
+            .or(`title.ilike.%${keyword}%,content.ilike.%${keyword}%`)
+            .order("created_at",{ascending:false});
+        return data;
     },
 
     //ノートの詳細を取得する関数

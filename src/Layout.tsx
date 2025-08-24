@@ -5,6 +5,7 @@ import { useCurrentUserStore } from './modules/auth/current-user.state';
 import { useNoteStore } from './modules/notes/note.state';
 import { useEffect, useState } from 'react';
 import { noteRepository } from './modules/notes/note.repository';
+import { Note } from './modules/notes/note.entity';
 
 const Layout = () => {
 
@@ -13,6 +14,9 @@ const Layout = () => {
   const {currentUser} = useCurrentUserStore();
   const noteStore = useNoteStore();
   const [isLoading, setIsLoading] = useState(true);
+  const [isShowModal,setIsShowModal] = useState(false);
+  const [searchResult,setSearchResult] = useState<Note[]>([]);  
+
 
   // この時点ではnoteRepository.findメソッドにparentDocumentIDが渡されていないので、ルートドキュメントのノートを取得
   //このルート親ノートは常に表示されている
@@ -27,6 +31,21 @@ const Layout = () => {
     }
     noteStore.set(notes);
     setIsLoading(false);
+  }
+
+  const searchNotes = async (keyword:string) => {
+    setIsLoading(true);
+    const notes = await noteRepository.findByKeyword(currentUser!.id,keyword);
+    if (notes == null) {
+      setIsLoading(false); 
+      return;
+    }
+    noteStore.set(notes);
+    setSearchResult(notes);
+    setIsLoading(false);
+    // if (searchResult.length > 0) {
+    //   setSearchResult(notes);
+    // }
   }
 
   //初回マウント時にノートを取得
@@ -49,15 +68,16 @@ const Layout = () => {
   return (
     <div className="h-full flex">
       {/* ローディング中はSideBarを表示しない(notesの取得が終わっていないため) */}
-      {!isLoading && <SideBar onSearchButtonClicked={() => {}} />}
+      {/* 検索モーダルを表示するための関数を渡す(propsにはonSearchButtonClickedという名前で渡す) */}
+      {!isLoading && <SideBar onSearchButtonClicked={() => setIsShowModal(true)} />}
       <main className="flex-1 h-full overflow-y-auto">
         <Outlet />
         <SearchModal
-          isOpen={false}
-          notes={[]}
+          isOpen={isShowModal}
+          notes={searchResult}
           onItemSelect={() => {}}
-          onKeywordChanged={() => {}}
-          onClose={() => {}}
+          onKeywordChanged={searchNotes}
+          onClose={() => setIsShowModal(false)}
         />
       </main>
     </div>

@@ -1,3 +1,20 @@
+/*
+SideBar コンポーネント
+このコンポーネントは、Notion風ノートアプリのサイドバーとして機能し、
+以下の主要機能を提供します：
+
+主な機能：
+1. ユーザー情報表示とログアウト機能（UserItemコンポーネントを配置）
+2. ノート検索機能へのアクセス（検索ボタンを配置）
+3. ノート一覧表示エリアの提供（NoteListコンポーネントを配置）
+4. 新規ノート作成機能（ノート作成ボタンと作成処理）とナビゲーション
+
+SideBar自体の責務：
+- 各機能コンポーネントのレイアウト配置
+- 新規ノート作成の処理
+- サイドバー全体のスタイリングとUI構造
+*/
+
 import { FC } from 'react';
 import { Item } from './Item';
 import { NoteList } from '../NoteList';
@@ -6,13 +23,14 @@ import { Plus, Search } from 'lucide-react';
 import { useCurrentUserStore } from '../../modules/auth/current-user.state';
 import { useNoteStore } from '../../modules/notes/note.state';
 import { noteRepository } from '../../modules/notes/note.repository';
+import { useNavigate } from 'react-router-dom';
 
 type Props = {
   onSearchButtonClicked: () => void;
 };
 
 const SideBar: FC<Props> = ({ onSearchButtonClicked }) => {
-
+  const navigate = useNavigate(); 
   const {currentUser} = useCurrentUserStore();
   const noteStore = useNoteStore();
 
@@ -21,6 +39,7 @@ const SideBar: FC<Props> = ({ onSearchButtonClicked }) => {
     //このボタンではノートが生成されるだけでタイトルはつけないので第二引数にtitleを渡さず、空のオブジェクトにしている
     const newNote = await noteRepository.create(currentUser!.id,{})
     noteStore.set([newNote])
+    navigate(`notes/${newNote.id}`)
   }
 
   return (
