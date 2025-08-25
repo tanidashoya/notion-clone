@@ -103,6 +103,15 @@ export const noteRepository = {
             .select()
             .single();
         return data;
+    },
+
+    //RPC（Remote Procedure Call）とは:データベース側に作成したカスタム関数を、JavaScriptから呼び出す機能
+    //delete_children_notes_recursively:データベース側で定義されたカスタム関数でありその関数の引数はnote_idにidを渡している
+    //delete_children_notes_recursively":notesテーブルに関して、引数に渡されたidのnoteの子ノート（全子孫のノート）を再帰的に削除する
+    async delete(id:number){
+        const {error} = await supabase.rpc("delete_children_notes_recursively",{note_id:id});
+        if (error !== null) throw new Error(error?.message);
+        return true;
     }
 
 }

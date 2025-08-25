@@ -1,4 +1,4 @@
-import { Outlet, Navigate } from 'react-router-dom';
+import { Outlet, Navigate, useNavigate } from 'react-router-dom';
 import SideBar from './components/SideBar';
 import { SearchModal } from './components/SearchModal';
 import { useCurrentUserStore } from './modules/auth/current-user.state';
@@ -6,6 +6,7 @@ import { useNoteStore } from './modules/notes/note.state';
 import { useEffect, useState } from 'react';
 import { noteRepository } from './modules/notes/note.repository';
 import { Note } from './modules/notes/note.entity';
+import { subscribe } from './lib/supabase';
 
 const Layout = () => {
 
@@ -16,6 +17,7 @@ const Layout = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isShowModal,setIsShowModal] = useState(false);
   const [searchResult,setSearchResult] = useState<Note[]>([]);  
+  const navigate = useNavigate();
 
 
   // この時点ではnoteRepository.findメソッドにparentDocumentIDが渡されていないので、ルートドキュメントのノートを取得
@@ -48,10 +50,40 @@ const Layout = () => {
     // }
   }
 
+  const moveToDetail = (noteId:number) => {
+    navigate(`/notes/${noteId}`);
+    setIsShowModal(false);
+  }
+
+  //payload:payloadはRealtimePostgresChangesPayload<Note>型のオブジェクトで、データベースの変更情報が入っている
+  //payloadは「どのように変更されるかを定義している」のではなく、「実際に変更が起きた後の結果情報」
+  //データベースが変更されたときに変更情報を接続されているアプリにpayloadとして送っている
+  const subscribeNote = () => {
+     if (currentUser == null) return; // null と undefined の両方をチェック
+     // callback関数:(payload) => { console.log(payload) }
+     // → 親が「データが来たらこうしてね」と子に渡した処理。
+     // → 子はイベントを受け取ったら必ずこの関数を実行する。
+     //リアルタイム通信でsupabaseから送られてくる情報の構造はこのページの下記に記している
+     return subscribe(currentUser!.id, (payload) => {
+        if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
+          noteStore.set([payload.new]);
+        }else if (payload.eventType === 'DELETE') {
+          noteStore.delete(payload.old.id!);
+        }
+     });
+
+   };
+  
+  
   //初回マウント時にノートを取得
+  //udemy講座では第二引数（依存配列）に渡しているのは[]だったが
+  //そうするとsubscribeNote関数がcurrentUser==undifinedで条件一致してしまい、処理が実行されないため、currentUserにしている
   useEffect(() => {
     fetchNotes();
-  }, []);
+    const channel = subscribeNote();
+  }, [currentUser]);
+
+
 
   //const currentUserAtom = atom<User>();で初期値なしの場合、currentUserはundefinedになる
   // if (currentUser == null){ が == nullの場合(緩い比較)ではtrueに貼るが、 === nullの場合(厳密な比較)ではfalseになる
@@ -75,7 +107,7 @@ const Layout = () => {
         <SearchModal
           isOpen={isShowModal}
           notes={searchResult}
-          onItemSelect={() => {}}
+          onItemSelect={moveToDetail}
           onKeywordChanged={searchNotes}
           onClose={() => setIsShowModal(false)}
         />
@@ -85,3 +117,42 @@ const Layout = () => {
 };
 
 export default Layout;
+
+
+
+/*
+リアルタイム通信でsupabaseのデータベースが変更された時に、payloadとして送られてくるデータベースの変更情報
+
+{schema: 'public', table: 'notes', commit_timestamp: '2025-08-25T12:43:24.340Z', eventType: 'INSERT', new: {…}, …}
+commit_timestamp
+: "2025-08-25T12:43:24.340Z"
+errors: null
+eventType: "INSERT"
+
+更新・追加される情報の場合はこちら
+new: 
+content: null
+created_at: "2025-08-25T12:43:24.337313+00:00"
+id: 134
+parent_document: null
+title: null
+user_id: "33747583-bc95-41d6-ba50-92ee7c758618"
+[[Prototype]]: Object
+
+削除される情報の場合はこちら
+old: {
+content: null
+created_at: "2025-08-25T12:43:24.337313+00:00"
+id: 134
+parent_document: null
+title: null
+user_id: "33747583-bc95-41d6-ba50-92ee7c758618"
+[[Prototype]]: Object
+}
+
+
+schema: "public"
+table: "notes"
+[[Prototype]]: Object
+
+*/

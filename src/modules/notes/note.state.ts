@@ -1,5 +1,6 @@
 import { atom, useAtom } from "jotai";
 import { Note } from "./note.entity";
+import { noteRepository } from "./note.repository";
 
 //note.entity.tsで定義したNote型を型定義として使って、Atomを作成
 //type Note = {
@@ -51,6 +52,31 @@ export const useNoteStore = () => {
     }
 
 
+    //(parentId:number):number[])：返り値の型を指定
+    //最初のasync(id:number)で渡されているidは削除するノートのid
+    //引数で渡される親ノートのIDと子ノートのparent_documentが一致するものを取得して、その子ノートのidを取得する
+    //concatメソッド：配列同士を結合して新しい配列を返すメソッド。
+    const deleteNote = async(id:number) => {
+        //findChildrenIds関数の定義
+        const findChildrenIds = (parentId:number):number[] => {
+            const childrenIds = notes.filter(note => note.parent_document == parentId).map(child => child.id)
+            //再帰的に子ノートのさらに子ノートのidを取得する
+            return childrenIds.concat(
+                ...childrenIds.map(childId => findChildrenIds(childId))
+            );
+        }
+        //findChildrenIds関数を呼び出して、削除するノートのidの子ノート（全部の子孫ノート）のidを取得する
+        const childrenIds = findChildrenIds(id);
+        //削除対象のノートは最初の引数で渡されたノートのidとchildrenIdsの配列になる
+        //"!deleteIds.includes(note.id)":渡されてきたnoteのidがdeleteIdsの配列に含まれていない場合にtrueを返す
+        //trueが返されたものだけを残して、falseが返されたものは削除される
+        const deleteIds = [id,...childrenIds];
+        setNotes((oldNotes)=>
+            oldNotes.filter(note => !deleteIds.includes(note.id))
+        )
+        await noteRepository.delete(id);
+    }
+
     const getOne = (id:number) => notes.find((note) => note.id == id);
 
 
@@ -62,5 +88,6 @@ export const useNoteStore = () => {
         getAll:() => notes,
         set,
         getOne,
+        delete:deleteNote,
     }
 }

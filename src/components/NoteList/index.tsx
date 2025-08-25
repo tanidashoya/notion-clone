@@ -83,6 +83,12 @@ export function NoteList({ layer = 0, parentId }: NoteListProps) {
     })
   }
 
+  const deleteNote = async(e:React.MouseEvent,noteId:number) => {
+    e.stopPropagation();
+    await noteStore.delete(noteId);
+    navigate("/");
+  }
+
   //引数で渡されたidを持つノート詳細ページに移動する関数
   const moveToDetail =(noteId:number)=>{
     navigate(`notes/${noteId}`)
@@ -124,6 +130,7 @@ export function NoteList({ layer = 0, parentId }: NoteListProps) {
               expanded={expanded.get(note.id)}
               onExpand={(e:React.MouseEvent)=>fetchChildren(e,note)}
               onClick={()=>moveToDetail(note.id)}
+              onDelete={(e)=>deleteNote(e,note.id)}
             />
             {/* 
             再帰コンポーネントは生成されるが次のグローバルステートの更新まで空のまま待機している状態
