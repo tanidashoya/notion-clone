@@ -3,14 +3,8 @@
 import { supabase } from "../../lib/supabase";
 
 
-//呼び出し元から渡された3つの値(name,email,password)を使う。
-//Supabaseのauth.signUp()メソッドにメール・パスワード・名前を渡す。(ここでのsignUPはsupabase.auth.signUp() は 
-// @supabase/supabase-js という公式 JavaScript クライアントライブラリに含まれている 認証用の関数)
-//結果が返ってくると、data に成功時の情報、error に失敗時の情報が入る
-//※authRepositoryはオブジェクト（authRepository というオブジェクトの“中に” signUp メソッドを定義）
+//※authRepositoryはオブジェクト（authRepository というオブジェクトの“中に” signUp などのメソッドを定義）
 //signUp() を呼ぶと結果は呼び出し元に返るだけで、authRepository 自体は何も覚えていない（＝ステートレス）
-
-
 export const authRepository = {
     //signUp メソッドを呼び出すと、内部で supabase.auth.signUp() が実行される
     //supabase.auth.signUp() 関数は Promise を返し、その中に「成功時のデータ」と「エラー情報」がセットになったオブジェクトが入っている。
@@ -18,6 +12,17 @@ export const authRepository = {
     //引数（name, email, password）は Supabase Auth サーバーに送信され、Authのユーザーテーブルに登録される
     //登録成功後、Supabaseから返ってきた data.user（ユーザー情報）を加工して呼び出し元に返している
     //そのため、呼び出し元では登録直後のユーザーID・メール・name などがすぐ使える
+    //Supabaseの signUp メソッドは、ざっくり言うと次のようなオブジェクトを受け取ります：
+    // {
+    //   email: string,             // サインアップするユーザーのメールアドレス
+    //   password: string,          // パスワード
+    //   options?: {
+    //     data?: object,           // ユーザープロフィールとして保存する追加データ
+    //     ...
+    //   }
+    // }
+    //オブジェクトの省略記法が使われている{email:email,・・・} ⇒ {email,・・・}
+    //上記の値の部分に引数で渡したemailの値が入る
     async signUp(name: string, email: string, password: string) {
         const {data, error} = await supabase.auth.signUp({
             email,
@@ -86,6 +91,15 @@ export const authRepository = {
     //user オブジェクト（ユーザーID、メール、user_metadata など）
     // supabase.auth.signIn() や supabase.auth.signUp() を実行してログインに成功すると、
     // Supabaseクライアントが自動でセッション情報（アクセストークンやユーザーデータ）をブラウザの localStorage に保存
+    //大雑把な理解としてはログインしているユーザーの情報を取得する。
+    //セッション情報の永続性について
+    // コードから分かる通り、getCurrentUser()はSupabaseのgetSession()を使用しており、これはブラウザのlocalStorageに保存されたセッション情報を取得しています。
+    // 永続性の特徴
+    // 同一PC・同一ブラウザでは基本的に永続
+    // セッション情報はブラウザのlocalStorageに保存
+    // ブラウザを閉じて再開しても残る
+    // PCを再起動しても残る
+    // ページリロードしても残る
     async getCurrentUser() {
       const {data,error} = await supabase.auth.getSession();
 
@@ -100,6 +114,14 @@ export const authRepository = {
       return {
         ...data.session.user,
         userName:data.session.user.user_metadata.name,
+      }
+    },
+
+    
+    async signOut() {
+      const {error} = await supabase.auth.signOut();
+      if (error != null) {
+        throw new Error(error?.message);
       }
     }
 }

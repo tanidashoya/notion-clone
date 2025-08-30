@@ -1,3 +1,6 @@
+// noteの詳細ページを表示するコンポーネント
+//タイトルの入力コンポーネントとエディターコンポーネントを表示する
+
 import { TitleInput } from '@/components/TitleInput';
 import { useParams } from 'react-router-dom';
 import { useEffect, useState } from 'react';
@@ -17,11 +20,16 @@ const NoteDetail = () => {
   const {currentUser} = useCurrentUserStore();
   const [isLoading,setIsLoading] = useState(false);
   const noteStore = useNoteStore(); 
+  //最初の段階ではnoteはundefinedになる⇒fetchoneが実行されてグローバルステートにURLに対応するノートが入る
+  //再レンダリング後に、noteStore.getOneメソッドによって、URLに対応したノートのみnoteとして取得される（）
   const note = noteStore.getOne(id);
 
+  //特定のノートを1件取得してグローバルステートに設定する機能
+  //このメソッドの役割は最終的にこのメソッドによってグローバルステートに渡したURLのIDと一致するノートをnoteStore.getOneによって取得するため（上記のnote）
   const fetchOne = async() => {
     setIsLoading(true);
     // 「TypeScriptに対してこの値はnullやundefinedではないことを断言する」演算子:!
+    //idはurlのidから渡されている
     const note = await noteRepository.findOne(currentUser!.id,id);
     if (note == null) {
       setIsLoading(false);
@@ -32,6 +40,7 @@ const NoteDetail = () => {
   }
 
   // URLのパラメータが変わったら、fetchOneが実行されてデータを取得する
+  //fetchOneによってグローバルステートが更新されると自動的に再レンダリングが実行される
   useEffect(() => {
     fetchOne();
   },[id]);
@@ -51,6 +60,7 @@ const NoteDetail = () => {
     id:number,note:{title?:string, content?:string}
   )=> {
     const updateNote = await noteRepository.update(id,note);
+    //データベースの更新処理が失敗した場合return（失敗したら何もしませんよ）
     if (updateNote == null) return;
     //更新したノートをグローバルステートに追加している
     //グローバルステートに既存の同じidを持つオブジェクトは更新される
@@ -63,6 +73,7 @@ const NoteDetail = () => {
       <div className="md:max-w-3xl lg:md-max-w-4xl mx-auto">
         {/* titleにはinputが変更された値が入ってくる */}
         {/* ノートのタイトルを更新するために、onTitleChangeを渡している */}
+        {/*  */}
         <TitleInput
           initialData={note}
           onTitleChange={(title) => updateNote(id,{title})}

@@ -1,3 +1,16 @@
+//Database型が定義するのは：
+// ✅ テーブル構造（どんなカラムがあるか）
+// ✅ INSERT時の型（何が必須で何が省略可能か）
+// ✅ UPDATE時の型（何を更新できるか）
+// ✅ RPC関数の型（引数と戻り値）
+// Database型が定義しないのは：
+// ❌ 認証機能（auth.）
+// ❌ リアルタイム機能（channel, realtime）
+// ❌ ストレージ機能（storage.）
+// ❌ クライアント設定（接続オプションなど）
+// つまり、データベースのスキーマ（構造）に関連する型のみをDatabase型で定義し、その他の機能は独立した型システムで管理されているということです！
+
+
 export type Json =
   | string
   | number
@@ -5,6 +18,8 @@ export type Json =
   | null
   | { [key: string]: Json | undefined }
   | Json[]
+
+
 
 export type Database = {
   // Allows to automatically instantiate createClient with right options
@@ -14,6 +29,7 @@ export type Database = {
   }
   public: {
     Tables: {
+      //supabaseのnotesテーブルの型定義
       notes: {
         Row: {
           content: string | null
@@ -23,6 +39,7 @@ export type Database = {
           title: string | null
           user_id: string
         }
+        //データを挿入するときの型
         Insert: {
           content?: string | null
           created_at?: string
@@ -31,6 +48,7 @@ export type Database = {
           title?: string | null
           user_id: string
         }
+        //データを更新するときの型
         Update: {
           content?: string | null
           created_at?: string

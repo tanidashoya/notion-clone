@@ -5,12 +5,8 @@ import { RealtimeChannel, RealtimePostgresChangesPayload } from "@supabase/supab
 import { Note } from "@/modules/notes/note.entity";
 
 
-//supabase という定数を作って、それを外部に**エクスポート（他のファイルから使えるように）**しています。
 // createClient() を呼び出すことで、Supabaseの接続情報を持ったクライアントオブジェクトが作られます。
 //このクライアントオブジェクトはプロジェクトURLとプロジェクトAPIキーの二つの引数を設定できる
-//プロジェクトURLはSupabaseプロジェクトのAPIエンドポイント（入り口）を指す（supabaseのダッシュボード⇒settings⇒DataAPI）
-//プロジェクトURLは公開URLとは別物で、公開URLの設定はVercelやVPSなどで行う
-//プロジェクトAPIはSupabaseが提供するAPIを使うための認証用キー
 //anon public key（公開用キー）: anon keyはフロントで使う公開キーですが、RLS（行レベルセキュリティ）で厳密に制御され、
 //ユーザーがサインインしていればそのユーザーのJWTが紐づいた操作になります。
 // service_role key（管理者キー）: すべての操作が可能(サーバー側だけで使用（絶対に公開しない）)サーバー側だけで使用（絶対に公開しない）:Supabaseの管理画面 → Project Settings → API 
@@ -20,10 +16,8 @@ import { Note } from "@/modules/notes/note.entity";
 
 
 //import.meta.env は Vite専用の環境変数読み込み方法
-//Viteでは、VITE_ プレフィックスがついた環境変数だけがブラウザ側コードから参照できる
 //※※※.gitignore に .env を必ず追加して、GitHubにアップロードしないようにする※※※
-//管理者用のAPIキー（service_role key）は、サーバー側でのみ使用するため、ブラウザ側では参照できないようにしている
-//つまりReact側のファイルに記述することはない
+//管理者用のAPIキー（service_role key）は、サーバー側でのみ使用するため、ブラウザ側では参照できない(React側のファイルに記述しない)ようにしている
 //Vite の場合、プロジェクトの ルートディレクトリに .env ファイルを作成して、そこに環境変数を記述する
 //Database型を指定することで、データベースの構造を型安全に利用できる(supabaseCLIでテーブルの型生成を自動生成)
 export const supabase = createClient<Database>(
@@ -34,17 +28,21 @@ export const supabase = createClient<Database>(
 
 //Supabaseのリアルタイム機能を使って、データベースの変更をリアルタイムで監視する機能を提供する関数
 //callback:(payload:RealtimePostgresChangesPayload<Note>)=>void:コールバック関数の型定義
-// RealtimePostgresChangesPayload<Note>型の引数を1つ受け取り
-// 何も返さない（void）関数
+// RealtimePostgresChangesPayload<Note>型の引数を1つ受け取り※※※これについては下部に書いてある
 //.channel("notes-changes") チャンネル名を指定（任意の文字列）※複数のリアルタイム接続を識別するために設定
-//.on:イベントリスナーを登録するメソッド。「〜が起きた時に、この処理を実行して」という指示を出すもの
+//.on:どのイベントを監視するかを定義。イベントリスナーを登録するメソッド。「〜が起きた時に、この処理を実行して」という指示を出すもの
 //onの第一引数postgres_changes: PostgreSQLデータベースの変更イベント（データベースに変更があるかを監視するイベント）
 //onの第二引数: データベースの変更イベントの監視条件を細かく指定する設定オブジェク
 //onの第三引数: 監視対象のイベントが発生した時に実行するコールバック関数
+//今回の例ではcallback関数にはeventの種類に応じてグローバルステートnoteStoreのデータを更新する関数を渡している
 //.subscribe():チャンネルを実際に購読（監視）開始するメソッド
+//呼び出しもとにRealtimeChannel オブジェクトが返される
+//第二引数での変更条件の部分に変更が起こった場合、第三引数のcallback関数に変更情報が引数payloadに渡される
 export const subscribe = (userId:string, callback:(payload:RealtimePostgresChangesPayload<Note>)=>void) => {
     return supabase
         .channel("notes-changes")
+        //ここでの<Note>はジェネリックによる型定義
+        //.on に渡した <Note> が callback の引数型に“反映される”**
         .on<Note>("postgres_changes",
             {
                 event:"*"     //監視対象のイベント（*:INSERT,UPDATE,DELETE,SELECT全部を表す）
@@ -54,7 +52,7 @@ export const subscribe = (userId:string, callback:(payload:RealtimePostgresChang
             },    
             callback  // ← callback関数を登録 ⇒ データベース変更イベントが発生した時に実行される
         )
-        .subscribe();
+        .subscribe(); //チャンネルを実際に購読（監視）開始するメソッド
 };
 
 //上記のsubscribe関数で作成したチャンネルを削除する関数(リアルタイム監視を終了する)
@@ -115,3 +113,25 @@ RLS（Row Level Security）は、ログイン中のユーザー情報（JWTの�
  * 注意: payloadは単なる引数名（dataでも何でもOK）
  *       Supabaseの内部処理は自動的に行われる（コードには見えない）
  */
+
+
+/*
+RealtimePostgresChangesPayload<Note> とは？
+この型自体が ジェネリック型で、呼び出し側から型を受け取る構造になっている
+ここでは<Note>を受け取っている
+
+これは 「DB変更イベントの通知全体」 を表す型です。
+中には「どんな変更があったのか」と「変更前後のデータ」が入っています。
+
+型イメージ：
+
+type RealtimePostgresChangesPayload<Note> = {
+  eventType: "INSERT" | "UPDATE" | "DELETE"
+  schema: string       // どのスキーマか
+  table: string        // どのテーブルか
+  commit_timestamp: string
+  new: Note | null        // 変更後のレコード　ここにジェネリックの.on<Note>が反映される　　
+  old: Note | null        // 変更前のレコード
+}
+
+*/

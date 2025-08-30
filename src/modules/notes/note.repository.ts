@@ -4,6 +4,7 @@ import { supabase } from "../../lib/supabase";
 export const noteRepository = {
     //.insert() に渡すオブジェクトのキーは、Supabase の該当テーブルのカラム名と完全に一致している必要がある
     //今回の例だと notes テーブルのカラム名は以下の通り。
+    //user_idには現在ログイン中のuserのidが入る
     // user_id, title, parent_document（ほかに id, content, created_at などもある）
     //.select():挿入したノートの情報を取得（selectだけでは挿入したレコードが1件でも、配列で返ってくるので、single()で1件だけ取得）
     //.single():挿入したノートの情報を1件だけ取得
@@ -18,6 +19,7 @@ export const noteRepository = {
     //     created_at: "2025-08-14T12:34:56.789Z"
     //   }
     // ]
+    //insertでデータを追加する場合は引数に渡されるのは現在のテーブルのculumn名に対応する引数
     async create(
         userID:string,
         //title,parentIdは仮に引数として渡さなくても大丈夫なようにオプショナル
@@ -53,6 +55,7 @@ export const noteRepository = {
             .eq("user_id",userID)
             .order("created_at",{ascending:false});
             //parentDocumentIDがnullでない場合は、parent_documentカラムがparentDocumentIDと一致するデータを取得。nullの場合はそのままdataがqueryとなる
+            //Layoutの初めの状態で呼び出されるときにはparentDocumentIDはnull（特に渡されず）parent_IDがnullのノート（ルート親ノート）を取得
             const {data} = 
                 parentDocumentID != null
                 //parent_document カラムが parentDocumentID と一致するデータだけを取得する
@@ -78,9 +81,10 @@ export const noteRepository = {
             .select()
             .eq("user_id",userID)
             //or:OR条件を指定する
-            //.ilike:部分一致を検索する（大文字小文字を区別せずに検索するメソッド）
+            //.ilike:完全一致を検索する（大文字小文字を区別せずに検索するメソッド）
             //%${keyword}%:keywordの前後に%を付けることで部分一致を検索する
             //.orをつけることで（）内の,で区切ることでOR条件を指定する
+            //or:少なくともどちらかを満たすレコードを取得する
             .or(`title.ilike.%${keyword}%,content.ilike.%${keyword}%`)
             .order("created_at",{ascending:false});
         return data;
@@ -89,9 +93,10 @@ export const noteRepository = {
     //ノートの詳細を取得する関数
     async findOne(userId:string, id:number) {
         const {data} = await supabase.from("notes").select().eq("id",id).eq("user_id",userId).single();
-        return data; 
+        return data;
     },
 
+    //noteの内容を更新するメソッド
     // updateの引数にはnotesテーブルにおいて更新したいclolumについてオブジェクトで渡す
     //database.type.tsで定義されているオブジェクトの型を渡す（Update）
     //updateは引数に渡されたオブジェクトのキー名と一致するカラム名の部分のデータを更新する

@@ -24,6 +24,7 @@ import { useCurrentUserStore } from '../../modules/auth/current-user.state';
 import { useNoteStore } from '../../modules/notes/note.state';
 import { noteRepository } from '../../modules/notes/note.repository';
 import { useNavigate } from 'react-router-dom';
+import { authRepository } from '../../modules/auth/auth.repository';
 
 type Props = {
   onSearchButtonClicked: () => void;
@@ -31,15 +32,24 @@ type Props = {
 
 const SideBar: FC<Props> = ({ onSearchButtonClicked }) => {
   const navigate = useNavigate(); 
-  const {currentUser} = useCurrentUserStore();
+  const currentUserStore = useCurrentUserStore();
   const noteStore = useNoteStore();
 
   const createNote = async() => {
     //titleは仮に渡さなくても大丈夫なようにオプショナルにしてある
     //このボタンではノートが生成されるだけでタイトルはつけないので第二引数にtitleを渡さず、空のオブジェクトにしている
-    const newNote = await noteRepository.create(currentUser!.id,{})
+    const newNote = await noteRepository.create(currentUserStore.currentUser!.id,{})
     noteStore.set([newNote])
     navigate(`notes/${newNote.id}`)
+  }
+
+  //サインアウト処理
+  //ログアウトすると、noteStoreやcurrentUserStoreなどのグローバルステートの中身（ノート一覧やユーザー情報）を空またはundefinedにする
+  const signOut = async() => {
+    await authRepository.signOut();
+    noteStore.clear();
+    currentUserStore.set(undefined);
+    navigate('/');
   }
 
   return (
@@ -48,15 +58,8 @@ const SideBar: FC<Props> = ({ onSearchButtonClicked }) => {
         <div>
           <div>
             <UserItem
-              user={{
-                id: 'test',
-                aud: 'test',
-                email: 'test@gmail.com',
-                user_metadata: { name: 'testさん' },
-                app_metadata: {},
-                created_at: 'test',
-              }}
-              signout={() => {}}
+              user={currentUserStore.currentUser!}
+              signout={signOut}
             />
             <Item label="検索" icon={Search} onClick={onSearchButtonClicked} />
           </div>

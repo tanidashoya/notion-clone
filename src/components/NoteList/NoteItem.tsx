@@ -26,6 +26,9 @@ import { Note } from '@/modules/notes/note.entity';
 import { useState } from 'react';
 import { ChevronRight, ChevronDown } from 'lucide-react';
 
+
+//NoteItemコンポーネントのpropsの型定義
+//オプショナルチュイニング？このプロパティは渡されない可能性がある
 interface Props {
   note:Note;
   expanded?: boolean;
@@ -38,6 +41,7 @@ interface Props {
 }
 
 //expanded:ノートの展開状態を管理するためのprops：デフォルトはfalse（最初は空のMapオブジェクトが渡されるためfalseとなる）
+//ここでの引数のデフォルト値はprops内でプロパティがundifinedの場合のみに適用される。
 export function NoteItem({
   note,
   onClick,
@@ -108,7 +112,8 @@ export function NoteItem({
         icon={getIcon()}
         onIconClick={onExpand}
         trailingItem={menu}
-        isActive={isHovered}
+        // マウスが乗ったり、ノートが選択されたらアクティブになる
+        isActive={isHovered || isSelected}
       />
     </div>
   );

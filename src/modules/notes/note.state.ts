@@ -78,7 +78,7 @@ export const useNoteStore = () => {
     }
 
     const getOne = (id:number) => notes.find((note) => note.id == id);
-
+    const clear = () => setNotes([]);
 
     //getAll という名前の関数を持つオブジェクトを返していて、その関数の戻り値が notes 配列
     //呼び出しもとでは・・・
@@ -89,5 +89,6 @@ export const useNoteStore = () => {
         set,
         getOne,
         delete:deleteNote,
+        clear,
     }
 }

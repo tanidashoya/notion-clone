@@ -6,7 +6,7 @@ import { useNoteStore } from './modules/notes/note.state';
 import { useEffect, useState } from 'react';
 import { noteRepository } from './modules/notes/note.repository';
 import { Note } from './modules/notes/note.entity';
-import { subscribe } from './lib/supabase';
+import { subscribe, unsubscribe } from './lib/supabase';
 
 const Layout = () => {
 
@@ -80,7 +80,14 @@ const Layout = () => {
   //そうするとsubscribeNote関数がcurrentUser==undifinedで条件一致してしまい、処理が実行されないため、currentUserにしている
   useEffect(() => {
     fetchNotes();
-    const channel = subscribeNote();
+    const channel = subscribeNote(); //RealtimeChannnelオブジェクトを解除操作に渡すための変数channelに格納している
+    // コンポーネントがアンマウントされる時に、チャンネルを削除する
+    // チャンネルを削除することで、リアルタイム通信を停止する
+    //クリーンアップ関数：useEffect内のreturnで返される関数は、コンポーネントがアンマウントされる時に実行される
+    //
+    return () =>{
+      unsubscribe(channel!);
+    }
   }, [currentUser]);
 
 

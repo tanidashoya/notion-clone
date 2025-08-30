@@ -27,6 +27,7 @@ function App() {
   const currentUserStore = useCurrentUserStore();
   
   //ログインしているユーザーの情報を取得するHook
+  //ログインしていない場合はcurrentUserはnullになる。
   const setSession = async() => {
     const currentUser = await authRepository.getCurrentUser();
     currentUserStore.set(currentUser as User);
