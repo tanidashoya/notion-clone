@@ -20,6 +20,7 @@ const Layout = () => {
   const navigate = useNavigate();
 
 
+  //fetch:取りに行くという意味（fetchNotes：ノートを取りに行く）
   // この時点ではnoteRepository.findメソッドにparentDocumentIDが渡されていないので、ルートドキュメントのノートを取得
   //このルート親ノートは常に表示されている
   //なぜならノートをつかさどるグローバルステートを更新する関数が古いものに新しいものを足す構造であるため
@@ -55,6 +56,7 @@ const Layout = () => {
     setIsShowModal(false);
   }
 
+  //subscribeNote:ノートを購読する
   //payload:payloadはRealtimePostgresChangesPayload<Note>型のオブジェクトで、データベースの変更情報が入っている
   //payloadは「どのように変更されるかを定義している」のではなく、「実際に変更が起きた後の結果情報」
   //データベースが変更されたときに変更情報を接続されているアプリにpayloadとして送っている
@@ -108,8 +110,11 @@ const Layout = () => {
     <div className="h-full flex">
       {/* ローディング中はSideBarを表示しない(notesの取得が終わっていないため) */}
       {/* 検索モーダルを表示するための関数を渡す(propsにはonSearchButtonClickedという名前で渡す) */}
+      {/* isLoadingがtrueの場合：OutletとSearchModalはレンダリングされるが、SideBarのみレンダリングされない */}
       {!isLoading && <SideBar onSearchButtonClicked={() => setIsShowModal(true)} />}
       <main className="flex-1 h-full overflow-y-auto">
+        {/* Outlet：子コンポーネントを表示するためのコンポーネント */}
+        {/* /に合致する場合はindexを記述しているコンポーネントを表示 */}
         <Outlet />
         <SearchModal
           isOpen={isShowModal}

@@ -43,6 +43,7 @@ export const useNoteStore = () => {
             //オブジェクトでは同じキーを持つ値が追加されたときには既存のキーのものは更新される(重複排除)
             //{ 1: note1, 2: note2, 3: note3(2回目), 4: note4, 5: note5 }となる（１～５は例えばの数字で実際にはDB側で割り当てられる主キー）
             for(const note of combinedNotes){
+                //note.idをkeyとして値にnoteを入れる
                 uniqueNotes[note.id] = note;
             }
 
@@ -59,8 +60,10 @@ export const useNoteStore = () => {
     const deleteNote = async(id:number) => {
         //findChildrenIds関数の定義
         const findChildrenIds = (parentId:number):number[] => {
+            //trueのものだけを残して、falseのものは削除される
             const childrenIds = notes.filter(note => note.parent_document == parentId).map(child => child.id)
             //再帰的に子ノートのさらに子ノートのidを取得する
+            //concatメソッド：配列同士を結合して新しい配列を返すメソッド。
             return childrenIds.concat(
                 ...childrenIds.map(childId => findChildrenIds(childId))
             );
@@ -71,6 +74,7 @@ export const useNoteStore = () => {
         //"!deleteIds.includes(note.id)":渡されてきたnoteのidがdeleteIdsの配列に含まれていない場合にtrueを返す
         //trueが返されたものだけを残して、falseが返されたものは削除される
         const deleteIds = [id,...childrenIds];
+        //deleteIdsの配列に含まれていないものだけを残して、含まれているものは削除される
         setNotes((oldNotes)=>
             oldNotes.filter(note => !deleteIds.includes(note.id))
         )

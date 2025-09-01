@@ -1,3 +1,19 @@
+// note.repository.ts は、ノートに関するデータベース操作（CRUD）を集めたファイル
+//C = Create（作成）
+// 新しいデータを追加する操作。
+// 例: SQLの INSERT 文
+
+// R = Read（読み取り）
+// データを取得・参照する操作。
+// 例: SQLの SELECT 文
+
+// U = Update（更新）
+// 既存のデータを変更する操作。
+// 例: SQLの UPDATE 文
+
+// D = Delete（削除）
+// データを削除する操作。
+// 例: SQLの DELETE 文
 //supabaseのnotes テーブルに新しいノート（行）を追加する処理」insert:データを追加する、挿入する、差し込む
 import { supabase } from "../../lib/supabase";
 
@@ -20,6 +36,9 @@ export const noteRepository = {
     //   }
     // ]
     //insertでデータを追加する場合は引数に渡されるのは現在のテーブルのculumn名に対応する引数
+    //async = 「この関数はPromiseを返す箱になりますよ」
+    // Promise = 「値を後で入れる箱（成功なら値、失敗ならエラー）」(まだ決まってないけど、いつか成功したら値、失敗したらエラーを入れるよ)
+    // await = 「箱の中身が準備できるまで待って、値を取り出す」
     async create(
         userID:string,
         //title,parentIdは仮に引数として渡さなくても大丈夫なようにオプショナル
